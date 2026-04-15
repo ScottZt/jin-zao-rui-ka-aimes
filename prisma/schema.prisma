@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String       @id @default(uuid())
+  name      String
+  cardId    String       @unique
+  role      String       // worker, admin
+  status    String       @default("active")
+  tasks     Task[]
+  reports   ReportLog[]
+  tokens    TokenLog[]
+  settlements WageSettlement[]
+}
+
+model Material {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  name          String
+  unit          String
+  safeStockQty  Int      @default(0)
+  inventory     Inventory?
+  transactions  Transaction[]
+  bomAsProduct  BOMItem[] @relation("BOMProduct")
+  bomAsMaterial BOMItem[] @relation("BOMMaterial")
+}
+
+model WorkOrder {
+  id        String   @id @default(uuid())
+  orderNo   String   @unique
+  productId String   // Usually maps to a product/material ID
+  planQty   Int
+  status    String   @default("draft")
+  createdAt DateTime @default(now())
+  tasks     Task[]
+  processPlans WorkOrderProcessPlan[]
+  transactions Transaction[]
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  orderId     String
+  processName String
+  userId      String
+  unitPrice   Float
+  status      String   @default("active") // pending, active, completed
+  order       WorkOrder @relation(fields: [orderId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  reports     ReportLog[]
+  exceptions  Exception[]
+}
+
+model ReportLog {
+  id            String   @id @default(uuid())
+  taskId        String
+  userId        String
+  type          String   // normal, exception
+  goodQty       Int      @default(0)
+  badQty        Int      @default(0)
+  voiceRawText  String?
+  createdAt     DateTime @default(now())
+  task          Task     @relation(fields: [taskId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Exception {
+  id          String   @id @default(uuid())
+  taskId      String
+  type        String   // material, equipment, quality
+  description String
+  status      String   @default("pending") // pending, resolved
+  task        Task     @relation(fields: [taskId], references: [id])
+}
+
+model TokenLog {
+  id               String   @id @default(uuid())
+  userId           String
+  featureModule    String
+  promptTokens     Int
+  completionTokens Int
+  totalCost        Float
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id])
+}
+
+model Inventory {
+  id          String   @id @default(uuid())
+  materialId  String   @unique
+  currentQty  Int      @default(0)
+  updatedAt   DateTime @updatedAt
+  material    Material @relation(fields: [materialId], references: [id])
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  materialId    String
+  orderId       String?
+  type          String   // in, out
+  qty           Int
+  sourceDocId   String?  // Could be orderId or taskId
+  createdAt     DateTime @default(now())
+  material      Material @relation(fields: [materialId], references: [id])
+  order         WorkOrder? @relation(fields: [orderId], references: [id])
+}
+
+model SkillModel {
+  id         String   @id @default(uuid())
+  targetType String   // user, process, department
+  targetId   String   // Could be userId, processName, etc.
+  metrics    String   // JSON format string
+  level      Int      @default(1)
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkOrderProcessPlan {
+  id          String   @id @default(uuid())
+  orderId     String
+  processName String
+  planQty     Int
+  actualQty   Int      @default(0)
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  order       WorkOrder @relation(fields: [orderId], references: [id])
+}
+
+model BOMItem {
+  id         String   @id @default(uuid())
+  productId  String
+  materialId String
+  qtyPerUnit Int
+  product    Material @relation("BOMProduct", fields: [productId], references: [id])
+  material   Material @relation("BOMMaterial", fields: [materialId], references: [id])
+
+  @@unique([productId, materialId])
+}
+
+model EquipmentEvent {
+  id              String   @id @default(uuid())
+  equipmentType   String
+  status          String
+  reportedByUserId String?
+  description     String?
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+  durationMinutes Int      @default(0)
+  createdAt       DateTime @default(now())
+}
+
+model ProcessDefinition {
+  id          String @id @default(uuid())
+  processCode String @unique
+  processName String
+  unit        String
+  minLevel    Int    @default(1)
+  isFinalCount Boolean @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model SkillDefinition {
+  id          String @id @default(uuid())
+  skillCode   String @unique
+  skillName   String
+  processCodes String
+  description String
+  metricsJson String
+  scoringJson String
+  createdAt   DateTime @default(now())
+}
+
+model PieceRate {
+  id         String @id @default(uuid())
+  processCode String
+  level      Int
+  unitPrice  Float
+  effectiveFrom DateTime @default(now())
+  effectiveTo   DateTime?
+
+  @@unique([processCode, level, effectiveFrom])
+}
+
+model RewardPolicy {
+  id          String @id @default(uuid())
+  rewardCode  String @unique
+  rewardName  String
+  triggerScope String
+  conditionJson String
+  amountJson    String
+  maxAmountPerShift Float @default(0)
+  enabled     Boolean @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model PenaltyPolicy {
+  id          String @id @default(uuid())
+  penaltyCode String @unique
+  penaltyName String
+  triggerScope String
+  conditionJson String
+  amountJson    String
+  maxPenaltyPerShift Float @default(0)
+  enabled     Boolean @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model WageSettlement {
+  id          String @id @default(uuid())
+  userId      String
+  scope       String
+  periodStart DateTime
+  periodEnd   DateTime
+  pieceAmount Float @default(0)
+  rewardAmount Float @default(0)
+  penaltyAmount Float @default(0)
+  finalAmount Float @default(0)
+  breakdownJson String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, scope, periodStart])
+}
