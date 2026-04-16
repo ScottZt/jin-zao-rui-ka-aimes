@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PackageSearch, AlertTriangle, ArrowDownRight, ArrowUpRight, Clock, RefreshCw } from 'lucide-react';
 
@@ -28,6 +28,17 @@ export default function Inventory() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [materials, setMaterials] = useState<Array<{ id: string; name: string; unit: string }>>([]);
+  const [users, setUsers] = useState<Array<{ id: string; name: string }>>([]);
+
+  const [inOpen, setInOpen] = useState(false);
+  const [outOpen, setOutOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [formOperatorId, setFormOperatorId] = useState('');
+  const [formMaterialId, setFormMaterialId] = useState('');
+  const [formQty, setFormQty] = useState('10');
+  const [formRemark, setFormRemark] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -56,6 +67,50 @@ export default function Inventory() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const [mRes, uRes] = await Promise.all([fetch('/api/v1/materials'), fetch('/api/v1/skills/users')]);
+      const [mJson, uJson] = await Promise.all([mRes.json(), uRes.json()]);
+      if (mJson.code === 200) setMaterials(mJson.data.map((x: any) => ({ id: x.id, name: x.name, unit: x.unit })));
+      if (uJson.code === 200) setUsers(uJson.data.map((x: any) => ({ id: x.id, name: x.name })));
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!formOperatorId && users.length) setFormOperatorId(users[0].id);
+    if (!formMaterialId && materials.length) setFormMaterialId(materials[0].id);
+  }, [users, materials, formOperatorId, formMaterialId]);
+
+  const currentMaterial = useMemo(() => materials.find((m) => m.id === formMaterialId) || null, [materials, formMaterialId]);
+
+  const submitStock = async (type: 'in' | 'out') => {
+    if (!formMaterialId) return;
+    const qty = Number(formQty);
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    setSubmitting(true);
+    try {
+      const url = type === 'in' ? '/api/v1/inventory/stock-ins' : '/api/v1/inventory/stock-outs';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operatorId: formOperatorId || undefined,
+          remark: formRemark || undefined,
+          items: [{ materialId: formMaterialId, qty }],
+        }),
+      });
+      const json = await res.json();
+      if (json.code === 200) {
+        setInOpen(false);
+        setOutOpen(false);
+        setFormRemark('');
+        fetchData();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'critical': return 'text-rose-400 bg-rose-400/10 border-rose-500/30';
@@ -82,13 +137,29 @@ export default function Inventory() {
           </h1>
           <p className="text-slate-400 text-sm mt-1">单据驱动的库存流转台账，安全库存红线预警系统</p>
         </div>
-        <button 
-          onClick={fetchData}
-          className="p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors shadow-sm"
-          title="手动刷新数据"
-        >
-          <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setInOpen(true)}
+            className="px-4 py-2 bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 rounded-lg text-sm hover:bg-emerald-600/30 transition-colors shadow-sm flex items-center"
+          >
+            <ArrowDownRight size={16} className="mr-2" />
+            标准入库
+          </button>
+          <button
+            onClick={() => setOutOpen(true)}
+            className="px-4 py-2 bg-rose-600/15 border border-rose-500/30 text-rose-300 rounded-lg text-sm hover:bg-rose-600/25 transition-colors shadow-sm flex items-center"
+          >
+            <ArrowUpRight size={16} className="mr-2" />
+            标准出库
+          </button>
+          <button
+            onClick={fetchData}
+            className="p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors shadow-sm"
+            title="手动刷新数据"
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
@@ -224,6 +295,89 @@ export default function Inventory() {
           </div>
         </div>
       </div>
+
+      {(inOpen || outOpen) ? (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="w-full max-w-xl bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+              <div className="text-slate-100 font-medium">{inOpen ? '标准入库' : '标准出库'}</div>
+              <button
+                onClick={() => {
+                  setInOpen(false);
+                  setOutOpen(false);
+                }}
+                className="text-slate-500 hover:text-slate-200"
+              >
+                关闭
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <div className="text-xs text-slate-500 mb-1">操作人</div>
+                <select
+                  value={formOperatorId}
+                  onChange={(e) => setFormOperatorId(e.target.value)}
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200"
+                >
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 mb-1">物料</div>
+                <select
+                  value={formMaterialId}
+                  onChange={(e) => setFormMaterialId(e.target.value)}
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200"
+                >
+                  {materials.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 mb-1">数量 {currentMaterial ? `(${currentMaterial.unit})` : ''}</div>
+                <input
+                  value={formQty}
+                  onChange={(e) => setFormQty(e.target.value)}
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 font-mono"
+                />
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 mb-1">备注</div>
+                <input
+                  value={formRemark}
+                  onChange={(e) => setFormRemark(e.target.value)}
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200"
+                />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-slate-800 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setInOpen(false);
+                  setOutOpen(false);
+                }}
+                className="px-4 py-2 rounded-lg border border-slate-800 bg-slate-950/30 text-slate-300 hover:text-slate-100 hover:border-slate-700 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                disabled={submitting}
+                onClick={() => submitStock(inOpen ? 'in' : 'out')}
+                className={`px-4 py-2 rounded-lg transition-colors ${inOpen ? 'bg-emerald-500 text-slate-950 hover:bg-emerald-400' : 'bg-rose-500 text-slate-950 hover:bg-rose-400'} ${submitting ? 'opacity-70 cursor-wait' : ''}`}
+              >
+                {submitting ? '提交中...' : '提交'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

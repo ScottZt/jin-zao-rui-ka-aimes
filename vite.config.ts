@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import tsconfigPaths from "vite-tsconfig-paths";
 import { traeBadgePlugin } from 'vite-plugin-trae-solo-badge';
 
+const apiPort = process.env.API_PORT || '3001'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -27,7 +29,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: `http://localhost:${apiPort}`,
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {

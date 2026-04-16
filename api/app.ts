@@ -22,6 +22,9 @@ import settingsRoutes from './routes/settings.js'
 import dashboardRoutes from './routes/dashboard.js'
 import wageRulesRoutes from './routes/wageRules.js'
 import wagesRoutes from './routes/wages.js'
+import processRoutes from './routes/processes.js'
+import workReportRoutes from './routes/workReports.js'
+import workReportItemRoutes from './routes/workReportItems.js'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -50,6 +53,9 @@ app.use('/api/v1/settings', settingsRoutes)
 app.use('/api/v1/dashboard', dashboardRoutes)
 app.use('/api/v1/wage-rules', wageRulesRoutes)
 app.use('/api/v1/wages', wagesRoutes)
+app.use('/api/v1/processes', processRoutes)
+app.use('/api/v1/work-reports', workReportRoutes)
+app.use('/api/v1/work-report-items', workReportItemRoutes)
 
 /**
  * health

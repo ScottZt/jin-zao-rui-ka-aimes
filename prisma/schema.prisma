@@ -17,6 +17,12 @@ model User {
   reports   ReportLog[]
   tokens    TokenLog[]
   settlements WageSettlement[]
+
+  stockIns        StockIn[]        @relation("StockInOperator")
+  stockOuts       StockOut[]       @relation("StockOutOperator")
+  inventoryLedgers InventoryLedger[] @relation("InventoryLedgerOperator")
+  workReports     WorkReport[]     @relation("WorkReportReporter")
+  workReportItems WorkReportItem[] @relation("WorkReportItemUser")
 }
 
 model Material {
@@ -29,6 +35,11 @@ model Material {
   transactions  Transaction[]
   bomAsProduct  BOMItem[] @relation("BOMProduct")
   bomAsMaterial BOMItem[] @relation("BOMMaterial")
+
+  stockInItems  StockInItem[]
+  stockOutItems StockOutItem[]
+  inventoryLedgers InventoryLedger[]
+  workReportItemsAsProduct WorkReportItem[] @relation("WorkReportItemProduct")
 }
 
 model WorkOrder {
@@ -41,6 +52,10 @@ model WorkOrder {
   tasks     Task[]
   processPlans WorkOrderProcessPlan[]
   transactions Transaction[]
+
+  stockIns    StockIn[]    @relation("StockInWorkOrder")
+  stockOuts   StockOut[]   @relation("StockOutWorkOrder")
+  workReports WorkReport[] @relation("WorkReportWorkOrder")
 }
 
 model Task {
@@ -233,4 +248,114 @@ model WageSettlement {
   user        User @relation(fields: [userId], references: [id])
 
   @@unique([userId, scope, periodStart])
+}
+
+model StockIn {
+  id          String   @id @default(uuid())
+  stockInNo   String   @unique
+  operatorId  String?
+  workOrderId String?
+  remark      String?
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  operator    User?      @relation("StockInOperator", fields: [operatorId], references: [id])
+  workOrder   WorkOrder? @relation("StockInWorkOrder", fields: [workOrderId], references: [id])
+  items       StockInItem[]
+}
+
+model StockInItem {
+  id        String   @id @default(uuid())
+  stockInId String
+  materialId String
+  qty       Int
+  createdAt DateTime @default(now())
+
+  stockIn   StockIn  @relation(fields: [stockInId], references: [id])
+  material  Material @relation(fields: [materialId], references: [id])
+}
+
+model StockOut {
+  id          String   @id @default(uuid())
+  stockOutNo  String   @unique
+  operatorId  String?
+  workOrderId String?
+  remark      String?
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  operator    User?      @relation("StockOutOperator", fields: [operatorId], references: [id])
+  workOrder   WorkOrder? @relation("StockOutWorkOrder", fields: [workOrderId], references: [id])
+  items       StockOutItem[]
+}
+
+model StockOutItem {
+  id         String   @id @default(uuid())
+  stockOutId String
+  materialId String
+  qty        Int
+  createdAt  DateTime @default(now())
+
+  stockOut   StockOut @relation(fields: [stockOutId], references: [id])
+  material   Material @relation(fields: [materialId], references: [id])
+}
+
+model InventoryLedger {
+  id          String   @id @default(uuid())
+  materialId  String
+  direction   String
+  bizType     String
+  bizId       String?
+  qty         Int
+  beforeQty   Int
+  afterQty    Int
+  operatorId  String?
+  workOrderId String?
+  remark      String?
+  createdAt   DateTime @default(now())
+
+  material    Material @relation(fields: [materialId], references: [id])
+  operator    User?    @relation("InventoryLedgerOperator", fields: [operatorId], references: [id])
+}
+
+model WorkReport {
+  id          String   @id @default(uuid())
+  reportNo    String   @unique
+  workOrderId String?
+  reporterId  String
+  shiftName   String
+  remark      String?
+  reportAt    DateTime @default(now())
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reporter    User      @relation("WorkReportReporter", fields: [reporterId], references: [id])
+  workOrder   WorkOrder? @relation("WorkReportWorkOrder", fields: [workOrderId], references: [id])
+  items       WorkReportItem[]
+}
+
+model WorkReportItem {
+  id           String   @id @default(uuid())
+  reportId     String
+  userId       String
+  processCode  String?
+  processName  String
+  productId    String
+  goodQty      Int      @default(0)
+  badQty       Int      @default(0)
+  lossQty      Int      @default(0)
+  shiftName    String
+  equipment    String?
+  skillLevel   Int      @default(1)
+  reportedAt   DateTime @default(now())
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  report       WorkReport @relation(fields: [reportId], references: [id])
+  user         User       @relation("WorkReportItemUser", fields: [userId], references: [id])
+  product      Material   @relation("WorkReportItemProduct", fields: [productId], references: [id])
 }

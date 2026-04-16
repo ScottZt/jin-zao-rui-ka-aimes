@@ -2,6 +2,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   ClipboardList, 
+  ListChecks,
   Users, 
   PackageSearch, 
   BrainCircuit, 
@@ -14,9 +15,10 @@ import {
 import { motion } from 'framer-motion';
 
 const navigation = [
-  { name: '首页看板', href: '/dashboard', icon: LayoutDashboard },
+  { name: '智能看板', href: '/dashboard', icon: LayoutDashboard },
   { name: '工单管理', href: '/work-orders', icon: ClipboardList },
   { name: '智能派工', href: '/dispatch', icon: Users },
+  { name: '报工明细', href: '/work-reports', icon: ListChecks },
   { name: '库存管理', href: '/inventory', icon: PackageSearch },
   { name: '人力资源', href: '/skill-center', icon: BrainCircuit },
   { name: '计费中心', href: '/billing', icon: CreditCard },

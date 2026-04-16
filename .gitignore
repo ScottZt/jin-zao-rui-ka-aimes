@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .vite
 /generated/prisma
+prisma/*.db
+prisma/*.db-*
+金造睿卡_轻量MES_系统介绍.pptx
