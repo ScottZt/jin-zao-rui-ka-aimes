@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./static/logo.jpg" alt="AIMES Logo" width="140" />
+  <img src="./static/logo.png" alt="AIMES Logo" width="140" />
   <h1>AIMES · 智能制造执行系统</h1>
   <p>面向生产现场的数字化协同平台，覆盖工单、报工、库存、派工、技能与计件结算闭环。</p>
 </div>
@@ -15,7 +15,7 @@
 <span style="color:red">**⚠️ 当前 GitHub 发布为官方维护版本，其他平台的转载或二次分发内容请注意甄别风险。**</span>
 ## 答疑、交流路径
 本星球以“咨询 + 答疑”为核心服务，围绕金造睿卡硬件、Agent 系统与 AI 定制落地，提供问题解答、方案评估与架构建议。适合正在推进数字化/智能化项目的企业负责人、产品经理与技术团队，帮助你少踩坑、快决策、稳落地。
-![alt text](static/星球二维码.jpg)
+![alt text](static/星球二维码.png)
 ## 目录
 
 - [项目定位](#项目定位)
