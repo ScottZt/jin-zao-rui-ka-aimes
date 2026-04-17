@@ -1,0 +1,35 @@
+{
+  "mcpServers": {
+    "local-all-tools": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "main_server"],
+      "env": {
+        "PYTHONUTF8": "1",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    },
+    "local-stdio-calculator": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "calculator"],
+      "disabled": true
+    },
+    "local-system-info": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "system_info"],
+      "disabled": true
+    },
+    "remote-sse-server": {
+      "type": "sse",
+      "url": "https://api.example.com/sse",
+      "disabled": true
+    },
+    "remote-http-server": {
+      "type": "http",
+      "url": "https://api.example.com/mcp",
+      "disabled": true
+    }
+  }
+}

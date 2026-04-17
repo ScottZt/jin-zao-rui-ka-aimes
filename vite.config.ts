@@ -1,12 +1,14 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tsconfigPaths from "vite-tsconfig-paths";
 import { traeBadgePlugin } from 'vite-plugin-trae-solo-badge';
 
-const apiPort = process.env.API_PORT || '3001'
-
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const apiPort = env.API_PORT || '3101';
+
+  return {
   plugins: [
     react({
       babel: {
@@ -46,4 +48,5 @@ export default defineConfig({
       }
     }
   }
+  };
 })
