@@ -1,15 +1,21 @@
-# AIMES
+<div align="center">
+  <img src="./static/logo.jpg" alt="AIMES Logo" width="140" />
+  <h1>AIMES · 智能制造执行系统</h1>
+  <p>面向生产现场的数字化协同平台，覆盖工单、报工、库存、派工、技能与计件结算闭环。</p>
+</div>
 
-> Advanced Intelligent Manufacturing Execution System  
-> 面向生产现场的智能制造执行系统（MES）原型，聚焦报工、库存、看板、派工与计件结算。
+<p align="center">
+  <img alt="Node.js" src="https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white" />
+  <img alt="Backend" src="https://img.shields.io/badge/API-Express-000000?logo=express&logoColor=white" />
+  <img alt="Frontend" src="https://img.shields.io/badge/UI-React%20%2B%20Vite-61DAFB?logo=react&logoColor=000" />
+  <img alt="ORM" src="https://img.shields.io/badge/ORM-Prisma-2D3748?logo=prisma&logoColor=white" />
+  <img alt="Status" src="https://img.shields.io/badge/Status-Active-success" />
+</p>
 
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=000)](https://react.dev/)
-[![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
-[![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
-
+<span style="color:red">**⚠️ 当前 GitHub 发布为官方维护版本，其他平台的转载或二次分发内容请注意甄别风险。**</span>
+## 答疑、交流路径
+本星球以“咨询 + 答疑”为核心服务，围绕金造睿卡硬件、Agent 系统与 AI 定制落地，提供问题解答、方案评估与架构建议。适合正在推进数字化/智能化项目的企业负责人、产品经理与技术团队，帮助你少踩坑、快决策、稳落地。
+![alt text](static/星球二维码.jpg)
 ## 目录
 
 - [项目定位](#项目定位)
